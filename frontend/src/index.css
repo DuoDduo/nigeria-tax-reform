@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+@theme {
+  /* Official Nigerian Government Colors & Tokens */
+  --color-background: var(--background, #ffffff);
+  --color-foreground: var(--foreground, #020817);
+  --color-border: var(--border, #e2e8f0);
+  
+  /* Custom Animation tokens */
+  --animate-fade-in: fadeIn 0.3s ease-in;
+  --animate-slide-up: slideUp 0.4s ease-out;
+  --animate-scale-in: scaleIn 0.3s ease-out;
+  --animate-spin-slow: spin 3s linear infinite;
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  :focus-visible {
+    /* v4 renaming: outline-none is now outline-hidden, 
+       outline-2 now sets outline-style: solid by default */
+    @apply outline-2 outline-offset-2 outline-green-600;
+  }
+
+  a {
+    @apply transition-colors duration-200;
+  }
+}
+
+/* Component classes are defined using standard CSS but can use @apply */
+@layer components {
+  .btn-primary {
+    @apply bg-green-700 hover:bg-green-800 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-white hover:bg-gray-50 text-green-700 font-semibold py-3 px-6 rounded-lg border-2 border-green-700 transition-all duration-200;
+  }
+
+  .gov-card {
+    @apply bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 p-6;
+  }
+
+  .official-badge {
+    @apply inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold;
+  }
+
+  /* Nigerian flag colors accent */
+  .nigeria-accent {
+    background: linear-gradient(to right, #008751 0%, #008751 33.33%, white 33.33%, white 66.66%, #008751 66.66%, #008751 100%);
+    height: 4px;
+  }
+}
+
+/* Custom Utilities in v4 use the @utility directive */
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@utility scrollbar-thin {
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    @apply bg-gray-100 rounded-full;
+  }
+  &::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 rounded-full hover:bg-gray-500;
+  }
+}
+
+@utility sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Keyframe definitions */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Print and Media Queries remain standard CSS */
+@media print {
+  .no-print { display: none !important; }
+}
+
+@media (max-width: 640px) {
+  h1 { @apply text-2xl; }
+  h2 { @apply text-xl; }
+}
