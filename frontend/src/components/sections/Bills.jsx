@@ -12,7 +12,8 @@ const Bills = () => {
       borderColor: 'border-green-200',
       iconBg: 'bg-green-600',
       textColor: 'text-green-700',
-      hoverBorder: 'hover:border-green-400'
+      hoverBorder: 'hover:border-green-400',
+      link: 'https://fiscalreforms.ng/wp-content/uploads/2024/12/HB.-1759-The-Nigeria-Tax-Bill-2024.pdf'
     },
     {
       icon: Scale,
@@ -23,7 +24,8 @@ const Bills = () => {
       borderColor: 'border-blue-200',
       iconBg: 'bg-blue-600',
       textColor: 'text-blue-700',
-      hoverBorder: 'hover:border-blue-400'
+      hoverBorder: 'hover:border-blue-400',
+      link:'https://fiscalreforms.ng/wp-content/uploads/2024/12/HB.-1756-The-Nigeria-Tax-Administration-Bill-2024.pdf'
     },
     {
       icon: BookOpen,
@@ -34,7 +36,8 @@ const Bills = () => {
       borderColor: 'border-purple-200',
       iconBg: 'bg-purple-600',
       textColor: 'text-purple-700',
-      hoverBorder: 'hover:border-purple-400'
+      hoverBorder: 'hover:border-purple-400',
+      link: 'https://fiscalreforms.ng/wp-content/uploads/2024/12/HB.-1757-The-Nigeria-Revenue-Service-Establishment-Bill-2024.pdf'
     },
     {
       icon: MapPin,
@@ -45,7 +48,8 @@ const Bills = () => {
       borderColor: 'border-orange-200',
       iconBg: 'bg-orange-600',
       textColor: 'text-orange-700',
-      hoverBorder: 'hover:border-orange-400'
+      hoverBorder: 'hover:border-orange-400',
+     link: 'https://fiscalreforms.ng/wp-content/uploads/2024/12/HB.-1758-The-Joint-Revenue-Board-Establishment-Bill-2024.pdf'
     }
   ];
 
@@ -75,10 +79,17 @@ const Bills = () => {
                     <p className="text-gray-700 mb-4 leading-relaxed text-sm md:text-base">
                       {bill.description}
                     </p>
-                    <button className={`${bill.textColor} font-semibold hover:underline inline-flex items-center gap-1 text-sm group-hover:gap-2 transition-all`}>
-                      Learn More 
-                      <ChevronRight className="w-4 h-4" />
-                    </button>
+                  <a
+                    href={bill.link}
+                    download
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${bill.textColor} font-semibold hover:underline inline-flex items-center gap-1 text-sm group-hover:gap-2 transition-all`}
+                  >
+                    Download PDF
+                    <ChevronRight className="w-4 h-4" />
+                  </a>
+
                   </div>
                 </div>
               </div>

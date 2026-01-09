@@ -126,11 +126,11 @@ const Footer = () => {
         <div className="border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             <div className="text-gray-400 text-sm">
-              <p>© 2024 Federal Republic of Nigeria. All rights reserved.</p>
+              <p>© 2026 Federal Republic of Nigeria. All rights reserved.</p>
               <p className="mt-1">TaxEase Nigeria - AI-Powered Tax Information Portal</p>
             </div>
             <div className="text-gray-400 text-xs">
-              <p>Built with ❤️ for Nigeria 🇳🇬</p>
+              <p>Built for 🇳🇬</p>
               <p className="mt-1">Powered by Advanced AI Technology</p>
             </div>
           </div>
