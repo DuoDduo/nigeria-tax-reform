@@ -20,8 +20,6 @@
 - [Project Structure](#-project-structure)
 - [Installation & Setup](#-installation--setup)
 - [Usage Guide](#-usage-guide)
-- [Grading Compliance](#-grading-compliance)
-- [Demo Instructions](#-demo-instructions)
 - [Team & Credits](#-team--credits)
 
 ---
