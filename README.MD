@@ -984,7 +984,7 @@ This project is for educational purposes. Tax bill content is public domain.
 
 - Nigerian National Assembly for publishing the reform bills
 - LangChain team for the RAG framework
-- Anthropic/OpenAI for the LLM APIs
+- OpenAI for the LLM APIs
 - The Nigerian people seeking to understand these important reforms
 
 ---
