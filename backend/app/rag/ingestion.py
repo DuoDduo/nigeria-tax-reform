@@ -51,7 +51,7 @@ class TaxBillIngestionPipeline:
         print(f"\n[2/3] Splitting {len(raw_chunks)} chunks into smaller pieces...")
         processed_chunks = self._split_chunks(raw_chunks)
         
-        print(f"✓ Created {len(processed_chunks)} final chunks")
+        print(f"Created {len(processed_chunks)} final chunks")
         
         return processed_chunks
     

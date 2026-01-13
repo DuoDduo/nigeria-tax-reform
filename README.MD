@@ -700,111 +700,17 @@ Frontend is now running at: **http://localhost:3000**
    - Click refresh icon in chat header
    - Starts fresh conversation
 
-### For Developers
-
-#### Running Tests
-
-```bash
-# Backend tests
-cd backend
-pytest
-
-# Frontend tests
-cd frontend
-npm test
 ```
 
-#### API Testing
-
-```bash
-# Health check
-curl http://localhost:8000/api/health
-
-# Send message
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{
-    "question": "What is VAT?",
-    "conversation_id": null
-  }'
 ```
-
 #### Viewing API Docs
 
 Open: http://localhost:8000/docs
 
 Interactive Swagger UI with all endpoints documented.
 
-
----
-
-## 🎬 Demo Instructions
-
-### Pre-Demo Checklist
-
-- [ ] Backend running at http://localhost:8000
-- [ ] Frontend running at http://localhost:3000
-- [ ] Browser zoom at 100% (for recording)
-- [ ] Close unnecessary tabs/windows
-- [ ] Screen recording software ready
-
-### Demo Script (5 minutes)
-
-#### Part 1: Problem & Solution (45 seconds)
-
-**Say:**
-> "Nigeria's 2024 Tax Reform Bills are 500+ pages of complex legal language affecting 200 million citizens. There's widespread misinformation on social media. People are making life-changing decisions based on false information."
->
-> "We built TaxEase Nigeria - an AI-powered portal that makes these reforms accessible to everyone."
-
-**Show:** Landing page, scroll through sections quickly
-
-#### Part 2: Conditional Retrieval (60 seconds)
-
-**Say:**
-> "Our AI uses conditional retrieval - it's smart about when to search documents. Watch this:"
-
-**Demo:**
-1. Click "Ask AI Assistant"
-2. Type: `Hello` → Show response (no sources)
-3. Type: `What is VAT?` → Show response WITH sources
-4. Expand sources section
-
-**Say:**
-> "See? Greetings don't waste time searching 500 pages. But tax questions immediately retrieve relevant sections with citations."
-
-#### Part 3: Conversation Memory (60 seconds)
-
-**Say:**
-> "The system maintains conversation context:"
-
-**Demo:**
-1. Type: `What are the Nigerian Tax Reform Bills?`
-2. Wait for response
-3. Type: `When do they take effect?`
-4. Show it understands "they" = the bills
-
-**Say:**
-> "It remembered what 'they' refers to. This is conversation memory - stored for up to 10 turns."
-
-#### Part 4: Source Attribution (45 seconds)
-
-**Say:**
-> "Every answer is backed by official documents:"
-
-**Demo:**
-1. Expand any source citation
-2. Point to bill name, section, page
-3. Show excerpt
-
-**Say:**
-> "This builds trust and fights misinformation. Users can Core Capabilities
-- **✅ Conditional Retrieval**: Intelligently decides when document retrieval is needed (greetings don't trigger retrieval)
-- **✅ Conversation Memory**: Maintains context across multi-turn conversations
-- **✅ Source Citation**: Every answer includes references to specific bills, sections, and pages
-- **✅ Misconception Detection**: Identifies and corrects common myths about the reforms
-- **✅ Multi-Document RAG**: Searches across all 4 tax reform bills simultaneously
-- **✅ Plain English Explanations**: Translates legal jargon into understandable language
+```
+```
 
 ### Technical Features
 - Semantic search with vector embeddings (ChromaDB)
@@ -901,7 +807,7 @@ nigerian-tax-reform-qa/
 ### Prerequisites
 - Python 3.9+
 - Node.js 16+
-- OpenAI API key (or Anthropic Claude API key)
+- OpenAI API key
 - The 4 Tax Reform Bill PDFs
 
 ### Step 1: Clone and Setup Backend
@@ -1043,94 +949,9 @@ Assistant: Compares old vs new rates, cites specific sections,
 User: "I heard everyone will pay 50% tax!"
 Assistant: "This is a misconception. The highest tax rate 
           remains 24%... [cites source]"
-```
-
----
-
-## 🧪 Testing
-
-### Test Conditional Retrieval
-
-```bash
-# Should NOT retrieve
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "Hello"}'
-
-# Should retrieve
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
   -d '{"question": "What is the VAT rate?"}'
+
 ```
-
-### Test Conversation Memory
-
-```bash
-# First message
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is VAT?", "conversation_id": "test123"}'
-
-# Follow-up (uses context)
-curl -X POST http://localhost:8000/api/chat \
-  -H "Content-Type: application/json" \
-  -d '{"question": "How does it affect businesses?", "conversation_id": "test123"}'
-```
-
-### Test Source Citation
-
-Every response with `needs_retrieval: true` should include:
-```json
-{
-  "sources": [
-    {
-      "bill_name": "nigeria_tax_bill",
-      "section": "Section 25",
-      "page": "42",
-      "excerpt": "..."
-    }
-  ]
-}
-```
-
-
-
----
-
-## 🎥 Demo Video Guide
-
-Create a 3-5 minute video showcasing:
-
-1. **System Overview** (30 seconds)
-   - Show architecture diagram
-   - Explain the problem being solved
-
-2. **Conditional Retrieval** (60 seconds)
-   - Send "Hello" → Show no retrieval
-   - Send "What is VAT?" → Show retrieval occurs
-   - Explain the logic
-
-3. **Conversation Memory** (60 seconds)
-   - Ask initial question
-   - Ask follow-up using "it" or "that"
-   - Show context is maintained
-
-4. **Source Citation** (45 seconds)
-   - Ask question requiring sources
-   - Expand sources section
-   - Show bill name, section, page
-
-5. **Misconception Detection** (45 seconds)
-   - Ask "Will everyone pay 50% tax?"
-   - Show misconception alert
-   - Demonstrate correction with sources
-
-6. **User Experience** (30 seconds)
-   - Show mobile responsiveness
-   - Demonstrate related questions
-   - Highlight clean design
-
----
 
 ## 🛠️ Troubleshooting
 

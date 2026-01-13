@@ -51,9 +51,9 @@ async def lifespan(app: FastAPI):
                 data_dir = "./data/tax_bills"
                 
                 if not Path(data_dir).exists():
-                    print(f"⚠ Creating data directory: {data_dir}")
+                    print(f" Creating data directory: {data_dir}")
                     Path(data_dir).mkdir(parents=True, exist_ok=True)
-                    print(f"📁 Please place PDF files in: {data_dir}")
+                    print(f" Please place PDF files in: {data_dir}")
                     print("   Then restart the application.")
                 else:
                     # Run ingestion pipeline
@@ -62,14 +62,14 @@ async def lifespan(app: FastAPI):
                 print(f"✓ Loaded existing vector store with {stats['document_count']} documents")
         
         except Exception as e:
-            print(f"⚠ Error loading vector store: {str(e)}")
+            print(f"Error loading vector store: {str(e)}")
             print("Attempting to create new vector store...")
             
             data_dir = "./data/tax_bills"
             if Path(data_dir).exists() and list(Path(data_dir).glob("*.pdf")):
                 vectorstore = run_ingestion_pipeline(data_dir)
             else:
-                print(f"⚠ No PDF files found in {data_dir}")
+                print(f"No PDF files found in {data_dir}")
                 print("   Please add PDF files and restart.")
         
         # Initialize agent

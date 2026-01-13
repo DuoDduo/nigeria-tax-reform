@@ -5,9 +5,9 @@ import os
 from typing import List, Dict, Any
 from pathlib import Path
 
-from langchain_chroma import Chroma                 # Use langchain-chroma
-from langchain_huggingface import HuggingFaceEmbeddings # Use langchain-huggingface
-from langchain_core.documents import Document       # Move from schema to core
+from langchain_chroma import Chroma                 
+from langchain_huggingface import HuggingFaceEmbeddings 
+from langchain_core.documents import Document       
 
 
 class TaxBillVectorStore:

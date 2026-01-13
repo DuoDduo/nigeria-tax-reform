@@ -1,35 +1,41 @@
-version: '3.8'
-
 services:
   backend:
+    image: taxease-backend:latest
     build:
-      context: ./backend
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
+      context: .
+      dockerfile: backend/Dockerfile
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ENVIRONMENT=production
       - CHROMA_PERSIST_DIRECTORY=/app/chroma_db
     volumes:
-      - ./backend/data:/app/data
-      - ./backend/chroma_db:/app/chroma_db
-    restart: unless-stopped
+      - ./data:/app/data
+      - ./chroma_db:/app/chroma_db
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 20s
 
   frontend:
+    image: taxease-frontend:latest
     build:
       context: ./frontend
       dockerfile: Dockerfile
     ports:
-      - "3000:80"
+      - "80:8080"
     depends_on:
-      - backend
-    restart: unless-stopped
-
-volumes:
-  chroma_db:
+      backend:
+        condition: service_healthy
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
