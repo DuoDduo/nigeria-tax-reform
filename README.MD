@@ -298,7 +298,7 @@ Pre-programmed patterns identify common myths:
 └─────────────────────────────────────────────────┘
                        ↓ API
 ┌─────────────────────────────────────────────────┐
-│         OpenAI GPT-4 / Anthropic Claude         │
+│         OpenAI GPT-4       │
 │         (Language Model)                        │
 │                                                 │
 │  • Generates human-like responses              │
