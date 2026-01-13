@@ -485,13 +485,7 @@ taxease-nigeria/
 │   │       └── ... (4 total)
 │   ├── chroma_db/                     # Vector store
 │   ├── requirements.txt
-│   ├── .env.example
-│   └── .env                           # Your config
-│
-├── docs/                              # Documentation
-│   ├── QUICKSTART.md
-│   ├── TESTING.md
-│   └── ...
+│   └── .env                           # Your config                            
 │
 ├── README.md                          # This file
 └── docker-compose.yml                 # Container setup
