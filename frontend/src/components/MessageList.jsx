@@ -1,35 +1,44 @@
 import React, { useEffect, useRef } from 'react';
-import { User, Bot, AlertCircle } from 'lucide-react';
+import { User, Bot, AlertCircle, Info } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import SourceCitation from './SourceCitation';
 import SuggestedQuestions from './SuggestedQuestions';
 
 /**
- * Component for displaying the message list
+ * Professional Message List for TaxEase AI
+ * Handles: Auto-scroll, Markdown rendering, Source Citations, 
+ * Misconception banners, and Suggested Questions.
  */
 const MessageList = ({ messages, isLoading, onSuggestedQuestion }) => {
   const messagesEndRef = useRef(null);
 
-  // Auto-scroll to bottom when new messages arrive
+  // Auto-scroll to bottom when new messages arrive or loading state changes
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
+  /** Handles suggested question click */
+  const handleSuggestedClick = (question) => {
+    if (!question) return;
+    onSuggestedQuestion(question);
+  };
+
   return (
-    <div className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-thin">
+    <div className="flex-1 w-full flex flex-col space-y-8 min-h-full">
+      {/* Welcome screen - Shown only when chat is empty */}
       {messages.length === 0 && !isLoading && (
-        <div className="text-center py-12 px-4">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-700 to-green-900 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <Bot className="w-12 h-12 text-white" />
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center animate-in fade-in duration-700">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-600 to-green-800 text-white rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-green-900/20">
+            <Bot size={40} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">
-            Welcome to the Tax Reform AI Assistant
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-3 tracking-tight">
+            TaxEase AI Assistant
           </h2>
-          <p className="text-gray-600 max-w-xl mx-auto mb-6">
-            I'm here to help you understand the Nigerian Tax Reform Bills in simple terms. 
-            Ask me anything about tax rates, VAT, small business exemptions, and more.
+          <p className="text-gray-600 max-w-lg mx-auto mb-10 leading-relaxed">
+            I'm here to help you navigate the Nigerian Tax Reform Bills. 
+            Ask me about VAT, small business exemptions, or CIT changes.
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-w-2xl mx-auto mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl w-full">
             {[
               "What are the tax reform bills?",
               "When do the changes take effect?",
@@ -38,8 +47,8 @@ const MessageList = ({ messages, isLoading, onSuggestedQuestion }) => {
             ].map((q, i) => (
               <button
                 key={i}
-                onClick={() => onSuggestedQuestion(q)}
-                className="p-4 bg-white border-2 border-gray-200 hover:border-green-600 hover:bg-green-50 rounded-lg text-left text-sm font-medium text-gray-700 hover:text-green-800 transition-all"
+                onClick={() => handleSuggestedClick(q)}
+                className="p-4 bg-white border border-gray-200 hover:border-green-600 hover:bg-green-50 rounded-xl text-left text-sm font-semibold text-gray-700 hover:text-green-800 transition-all shadow-sm"
               >
                 {q}
               </button>
@@ -48,93 +57,133 @@ const MessageList = ({ messages, isLoading, onSuggestedQuestion }) => {
         </div>
       )}
 
+      {/* Chat messages */}
       {messages.map((message, index) => (
-        <div key={index} className="animate-fade-in">
-          {message.type === 'user' ? (
-            <div className="flex items-start gap-3 justify-end">
-              <div className="bg-gradient-to-r from-green-700 to-green-800 text-white rounded-2xl rounded-tr-sm p-4 max-w-2xl shadow-md">
-                <p className="text-sm md:text-base leading-relaxed">{message.content}</p>
-              </div>
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center shadow-md">
-                  <User className="w-6 h-6 text-white" />
-                </div>
+        <div 
+          key={index} 
+          className={`flex w-full animate-in slide-in-from-bottom-2 duration-300 ${
+            message.type === 'user' ? 'justify-end' : 'justify-start'
+          }`}
+        >
+          <div className={`flex max-w-[90%] md:max-w-[80%] gap-3 ${
+            message.type === 'user' ? 'flex-row-reverse' : 'flex-row'
+          }`}>
+            
+            {/* Avatar Icon */}
+            <div className="shrink-0 mt-1">
+              <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm ${
+                message.type === 'user' ? 'bg-gray-800' : 'bg-green-700'
+              }`}>
+                {message.type === 'user' ? (
+                  <User size={18} className="text-white" />
+                ) : (
+                  <Bot size={18} className="text-white" />
+                )}
               </div>
             </div>
-          ) : (
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-md">
-                  <Bot className="w-6 h-6 text-white" />
-                </div>
+
+            {/* Content Container */}
+            <div className={`flex flex-col space-y-3 ${message.type === 'user' ? 'items-end' : 'items-start'}`}>
+              
+              {/* Message Bubble */}
+              <div className={`
+                p-4 md:p-5 rounded-2xl shadow-sm border h-auto w-full
+                ${message.type === 'user' 
+                  ? 'bg-green-700 border-green-800 text-white rounded-tr-none' 
+                  : 'bg-white border-gray-200 text-gray-800 rounded-tl-none'}
+              `}>
+                {message.error ? (
+                  <div className="flex items-start gap-3 text-red-600">
+                    <AlertCircle size={18} className="shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-bold uppercase tracking-wider text-[10px]">System Error</p>
+                      <p className="mt-1">{message.content}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="markdown-content text-sm md:text-base leading-relaxed break-words">
+                    <ReactMarkdown 
+                      components={{
+                        p: ({node, ...props}) => <p className="mb-4 last:mb-0" {...props} />,
+                        ul: ({node, ...props}) => <ul className="list-disc ml-5 mb-4 space-y-2" {...props} />,
+                        ol: ({node, ...props}) => <ol className="list-decimal ml-5 mb-4 space-y-2" {...props} />,
+                        li: ({node, ...props}) => <li className="text-inherit" {...props} />,
+                        strong: ({node, ...props}) => (
+                          <strong className={message.type === 'user' ? 'font-bold text-white' : 'font-bold text-gray-900'} {...props} />
+                        ),
+                        h3: ({node, ...props}) => <h3 className="text-lg font-bold mb-2" {...props} />,
+                        code: ({node, ...props}) => (
+                          <code className="bg-gray-100 text-red-600 px-1 rounded font-mono text-xs" {...props} />
+                        )
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  </div>
+                )}
               </div>
-              <div className="flex-1 max-w-3xl">
-                <div className="bg-white border-2 border-gray-200 rounded-2xl rounded-tl-sm p-5 shadow-md">
-                  {message.error ? (
-                    <div className="flex items-start gap-3 text-red-600">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-semibold">Error</p>
-                        <p className="text-sm mt-1">{message.content}</p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="prose prose-sm max-w-none prose-headings:text-gray-900 prose-p:text-gray-700 prose-strong:text-gray-900 prose-a:text-green-700">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
-                    </div>
-                  )}
+
+              {/* Auxiliary Content (AI Only) */}
+              {message.type === 'assistant' && !message.error && (
+                <div className="w-full space-y-3 animate-in fade-in duration-500 delay-150">
                   
+                  {/* Fact Check / Misconception */}
                   {message.misconception_detected && (
-                    <div className="mt-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-500 rounded-r-lg">
-                      <p className="font-semibold text-yellow-900 flex items-center gap-2 mb-1">
-                        <AlertCircle className="w-5 h-5" />
-                        Common Misconception Addressed
-                      </p>
-                      <p className="text-sm text-yellow-800">
-                        This answer corrects misinformation that's been spreading. Always verify facts from official sources.
+                    <div className="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl shadow-sm">
+                      <div className="flex items-center gap-2 text-amber-900 font-bold text-xs uppercase tracking-widest mb-1">
+                        <Info size={14} className="text-amber-600" />
+                        Official Fact Check
+                      </div>
+                      <p className="text-sm text-amber-800">
+                        This response corrects a common tax-related misconception. Always cross-reference with official FIRS gazettes.
                       </p>
                     </div>
                   )}
 
+                  {/* Legal Sources */}
                   {message.sources && message.sources.length > 0 && (
-                    <SourceCitation sources={message.sources} />
+                    <div className="bg-gray-50 border border-gray-100 rounded-xl p-1">
+                      <SourceCitation sources={message.sources} />
+                    </div>
                   )}
 
+                  {/* Follow-up Questions */}
                   {message.relatedQuestions && message.relatedQuestions.length > 0 && (
-                    <SuggestedQuestions
-                      questions={message.relatedQuestions}
-                      onQuestionClick={onSuggestedQuestion}
-                      isLoading={isLoading}
-                    />
+                    <div className="pt-2">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1 mb-2">Suggested Follow-ups</p>
+                      <SuggestedQuestions
+                        questions={message.relatedQuestions}
+                        onQuestionClick={handleSuggestedClick}
+                        isLoading={isLoading}
+                      />
+                    </div>
                   )}
                 </div>
-              </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       ))}
 
+      {/* Thinking Indicator */}
       {isLoading && (
-        <div className="flex items-start gap-3 animate-fade-in">
-          <div className="flex-shrink-0">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-700 to-green-900 flex items-center justify-center shadow-md">
-              <Bot className="w-6 h-6 text-white" />
-            </div>
+        <div className="flex justify-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-green-700 flex items-center justify-center shrink-0">
+            <Bot size={18} className="text-white" />
           </div>
-          <div className="bg-white border-2 border-gray-200 rounded-2xl rounded-tl-sm p-5 shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="flex gap-1.5">
-                <div className="w-2.5 h-2.5 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                <div className="w-2.5 h-2.5 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                <div className="w-2.5 h-2.5 bg-green-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-              </div>
-              <span className="text-sm text-gray-600 font-medium">AI is thinking...</span>
+          <div className="bg-white border border-gray-200 p-4 rounded-2xl rounded-tl-none shadow-sm flex items-center gap-3">
+            <div className="flex gap-1.5">
+              <span className="w-2 h-2 bg-green-600 rounded-full animate-bounce [animation-duration:0.8s]"></span>
+              <span className="w-2 h-2 bg-green-600 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.2s]"></span>
+              <span className="w-2 h-2 bg-green-600 rounded-full animate-bounce [animation-duration:0.8s] [animation-delay:0.4s]"></span>
             </div>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Processing</span>
           </div>
         </div>
       )}
 
-      <div ref={messagesEndRef} />
+      {/* Invisible scroll anchor */}
+      <div ref={messagesEndRef} className="h-4 w-full shrink-0" />
     </div>
   );
 };

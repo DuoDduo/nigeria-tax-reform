@@ -1,114 +1,112 @@
-/**
- * API client for communicating with the backend
- */
-import axios from 'axios';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-
-// Create axios instance
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  timeout: 30000, // 30 second timeout
-});
+// src/api/chatAPI.js
+import { apiClient } from './authAPI';
 
 /**
- * Send a chat message
- * @param {string} question - The user's question
- * @param {string} conversationId - Optional conversation ID
- * @returns {Promise} Response with answer and sources
+ * Fetch all conversations (for sidebar history)
  */
-export const sendMessage = async (question, conversationId = null) => {
+export const getConversations = async () => {
   try {
-    const response = await apiClient.post('/chat', {
-      question,
-      conversation_id: conversationId,
-    });
+    const response = await apiClient.get('/conversations');
     return response.data;
-  } catch (error) {
-    console.error('Error sending message:', error);
-    throw error;
+  } catch (err) {
+    console.error('Error fetching conversations:', err);
+    throw err;
   }
 };
 
 /**
- * Create a new conversation
- * @returns {Promise} New conversation ID
+ * Fetch messages/details for a specific conversation
+ */
+export const getConversationMessages = async (conversationId) => {
+  try {
+    const response = await apiClient.get(`/conversations/${conversationId}`);
+    return response.data;
+  } catch (err) {
+    console.error(`Error fetching conversation ${conversationId}:`, err);
+    throw err;
+  }
+};
+
+/**
+ * Send a message to an existing conversation
+ * Updated to pass conversation_id to avoid 422 Unprocessable Entity errors
+ */
+export const sendMessage = async (messageText, conversationId) => {
+  try {
+    const payload = { 
+      question: messageText, 
+      conversation_id: conversationId 
+    };
+    
+    // Note: Verify if your backend expects '/chat' or '/conversations/chat'
+    const response = await apiClient.post('/chat', payload);
+    return response.data;
+  } catch (err) {
+    // Extract specific validation error message from FastAPI if available
+    const detail = err.response?.data?.detail;
+    const errorMessage = Array.isArray(detail) ? detail[0].msg : detail;
+    throw new Error(errorMessage || 'Failed to send message');
+  }
+};
+
+/**
+ * Create a new conversation session
  */
 export const createConversation = async () => {
   try {
-    const response = await apiClient.post('/conversation/new');
-    return response.data.conversation_id;
-  } catch (error) {
-    console.error('Error creating conversation:', error);
-    throw error;
-  }
-};
-
-/**
- * Get conversation status
- * @param {string} conversationId - Conversation ID
- * @returns {Promise} Conversation metadata
- */
-export const getConversationStatus = async (conversationId) => {
-  try {
-    const response = await apiClient.get(`/conversation/${conversationId}`);
+    const response = await apiClient.post('/conversations/new', {});
     return response.data;
-  } catch (error) {
-    console.error('Error getting conversation status:', error);
-    throw error;
+  } catch (err) {
+    console.error('Error creating conversation:', err);
+    throw err;
   }
 };
 
 /**
- * Clear conversation history
- * @param {string} conversationId - Conversation ID
- * @returns {Promise}
+ * Update the title of a conversation (e.g., after the first message)
  */
-export const clearConversation = async (conversationId) => {
+export const updateConversationTitle = async (conversationId, title) => {
   try {
-    await apiClient.delete(`/conversation/${conversationId}`);
-  } catch (error) {
-    console.error('Error clearing conversation:', error);
-    throw error;
+    const response = await apiClient.patch(`/conversations/${conversationId}`, { title });
+    return response.data;
+  } catch (err) {
+    console.error('Error updating title:', err);
+    throw err;
   }
 };
 
 /**
- * Check system health
- * @returns {Promise} Health status
+ * Delete a specific conversation session
+ * Renamed from clearConversation to match ChatPage.jsx imports
+ */
+export const deleteConversation = async (conversationId) => {
+  try {
+    await apiClient.delete(`/conversations/${conversationId}`);
+  } catch (err) {
+    console.error(`Error deleting conversation ${conversationId}:`, err);
+    throw err;
+  }
+};
+
+/**
+ * Health check to monitor system status
  */
 export const checkHealth = async () => {
   try {
     const response = await apiClient.get('/health');
     return response.data;
-  } catch (error) {
-    console.error('Error checking health:', error);
-    throw error;
-  }
-};
-
-/**
- * Get system statistics
- * @returns {Promise} System stats
- */
-export const getSystemStats = async () => {
-  try {
-    const response = await apiClient.get('/stats');
-    return response.data;
-  } catch (error) {
-    console.error('Error getting stats:', error);
-    throw error;
+  } catch (err) {
+    console.error('Error checking backend health:', err);
+    throw err;
   }
 };
 
 export default {
   sendMessage,
   createConversation,
-  getConversationStatus,
-  clearConversation,
+  getConversations,
+  getConversationMessages,
+  updateConversationTitle,
+  deleteConversation,
   checkHealth,
-  getSystemStats,
 };

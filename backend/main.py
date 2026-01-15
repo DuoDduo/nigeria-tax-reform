@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-from app.api import routes
+from app.api import routes, auth_routes
 from app.rag.vectorstore import TaxBillVectorStore
 from app.rag.ingestion import run_ingestion_pipeline
 from app.agents.tax_agent import TaxReformAgent
+from app.config.database import init_db
 
 # Load environment variables
 load_dotenv()
@@ -29,14 +30,23 @@ async def lifespan(app: FastAPI):
     """
     # Startup
     print("=" * 70)
-    print("STARTING NIGERIAN TAX REFORM Q&A SYSTEM")
+    print("STARTING TAXEASE NIGERIA Q&A SYSTEM")
     print("=" * 70)
     
     global vectorstore, agent
     
     try:
+        # Initialize database
+        print("\n[0/4] Initializing database...")
+        try:
+            init_db()
+            print("✓ Database initialized")
+        except Exception as e:
+            print(f"⚠ Database initialization: {str(e)}")
+            print("  Continue if tables already exist")
+        
         # Initialize vector store
-        print("\n[1/3] Initializing vector store...")
+        print("\n[1/4] Initializing vector store...")
         vectorstore = TaxBillVectorStore(
             persist_directory=os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma_db")
         )
@@ -47,19 +57,19 @@ async def lifespan(app: FastAPI):
             stats = vectorstore.get_stats()
             
             if stats['document_count'] == 0:
-                print("⚠ Vector store is empty. Running ingestion...")
+                print("Vector store is empty. Running ingestion...")
                 data_dir = "./data/tax_bills"
                 
                 if not Path(data_dir).exists():
-                    print(f" Creating data directory: {data_dir}")
+                    print(f"Creating data directory: {data_dir}")
                     Path(data_dir).mkdir(parents=True, exist_ok=True)
-                    print(f" Please place PDF files in: {data_dir}")
+                    print(f"Please place PDF files in: {data_dir}")
                     print("   Then restart the application.")
                 else:
                     # Run ingestion pipeline
                     vectorstore = run_ingestion_pipeline(data_dir)
             else:
-                print(f"✓ Loaded existing vector store with {stats['document_count']} documents")
+                print(f"Loaded existing vector store with {stats['document_count']} documents")
         
         except Exception as e:
             print(f"Error loading vector store: {str(e)}")
@@ -69,24 +79,24 @@ async def lifespan(app: FastAPI):
             if Path(data_dir).exists() and list(Path(data_dir).glob("*.pdf")):
                 vectorstore = run_ingestion_pipeline(data_dir)
             else:
-                print(f"No PDF files found in {data_dir}")
+                print(f"⚠ No PDF files found in {data_dir}")
                 print("   Please add PDF files and restart.")
         
         # Initialize agent
-        print("\n[2/3] Initializing AI agent...")
+        print("\n[3/4] Initializing AI agent...")
         agent = TaxReformAgent(vectorstore)
         routes.set_agent(agent)
         print("✓ AI agent initialized")
         
-        print("\n[3/3] System ready!")
+        print("\n[4/4] System ready!")
         print("=" * 70)
-        print("✓ Nigerian Tax Reform Q&A System is ONLINE")
+        print("TaxEase Nigeria Q&A System is ONLINE")
         print("=" * 70)
         print(f"API Documentation: http://localhost:{os.getenv('API_PORT', '8000')}/docs")
         print("=" * 70)
     
     except Exception as e:
-        print(f"\n✗ STARTUP ERROR: {str(e)}")
+        print(f"\nSTARTUP ERROR: {str(e)}")
         print("Please check your configuration and try again.")
         raise
     
@@ -100,9 +110,9 @@ async def lifespan(app: FastAPI):
 
 # Create FastAPI app
 app = FastAPI(
-    title="Nigerian Tax Reform Bills Q&A API",
+    title="TaxEase Nigeria API",
     description="AI-powered assistant for understanding Nigerian Tax Reform Bills 2024",
-    version="1.0.0",
+    version="2.0.0",
     lifespan=lifespan
 )
 
@@ -116,6 +126,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth_routes.router, prefix="/api")
 app.include_router(routes.router, prefix="/api", tags=["chat"])
 
 
@@ -124,15 +135,23 @@ app.include_router(routes.router, prefix="/api", tags=["chat"])
 async def root():
     """Root endpoint with API information."""
     return {
-        "message": "Nigerian Tax Reform Bills Q&A API",
-        "version": "1.0.0",
+        "message": "TaxEase Nigeria API",
+        "version": "2.0.0",
         "documentation": "/docs",
         "health": "/api/health",
         "endpoints": {
-            "chat": "/api/chat",
-            "health": "/api/health",
-            "stats": "/api/stats",
-            "new_conversation": "/api/conversation/new"
+            "auth": {
+                "signup": "/api/auth/signup",
+                "login": "/api/auth/login",
+                "refresh": "/api/auth/refresh",
+                "logout": "/api/auth/logout",
+                "me": "/api/auth/me"
+            },
+            "chat": {
+                "chat": "/api/chat",
+                "conversations": "/api/conversations",
+                "new_conversation": "/api/conversations/new"
+            }
         }
     }
 

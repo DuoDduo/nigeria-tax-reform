@@ -12,3 +12,9 @@ sentence-transformers
 pypdf
 python-dotenv
 pdfplumber
+sqlalchemy
+pymysql
+alembic
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator

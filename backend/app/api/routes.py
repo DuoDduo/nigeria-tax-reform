@@ -1,14 +1,18 @@
 """
-API routes for the Tax Reform Q&A application.
+API routes for chat (with database persistence)
 """
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
+from sqlalchemy.orm import Session
+from datetime import datetime
+import json
+
 from app.agents.tax_agent import TaxReformAgent
-import uuid
+from app.config.database import get_db
+from app.models.database import User, Conversation, Message
+from app.api.dependencies import get_current_user
 
-
-# Create router
 router = APIRouter()
 
 # Global agent instance (initialized in main.py)
@@ -25,7 +29,7 @@ def set_agent(tax_agent: TaxReformAgent):
 class ChatRequest(BaseModel):
     """Request model for chat endpoint."""
     question: str = Field(..., description="User's question", min_length=1)
-    conversation_id: Optional[str] = Field(None, description="Conversation ID for memory")
+    conversation_id: Optional[str] = Field(None, description="Conversation ID")
     
     class Config:
         json_schema_extra = {
@@ -54,196 +58,283 @@ class ChatResponse(BaseModel):
     related_questions: List[str]
 
 
-class ConversationStatus(BaseModel):
-    """Conversation status model."""
-    conversation_id: str
-    exists: bool
-    message_count: Optional[int] = None
-    turn_count: Optional[int] = None
+class ConversationSummary(BaseModel):
+    """Conversation summary model."""
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    message_count: int
 
 
-class HealthResponse(BaseModel):
-    """Health check response."""
-    status: str
-    message: str
-    vectorstore_initialized: bool
-    document_count: Optional[int] = None
+class ConversationDetail(BaseModel):
+    """Detailed conversation with messages."""
+    id: str
+    title: str
+    created_at: str
+    updated_at: str
+    messages: List[Dict[str, Any]]
 
 
-# Endpoints
-@router.post("/chat", response_model=ChatResponse, status_code=status.HTTP_200_OK)
-async def chat(request: ChatRequest):
+@router.post("/chat", response_model=ChatResponse)
+async def chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Main chat endpoint for asking questions about tax reforms.
-    
-    - **question**: The user's question
-    - **conversation_id**: Optional conversation ID for maintaining context
-    
-    Returns answer with sources and related questions.
+    Send message to AI assistant.
+    Requires authentication. Saves conversation to database.
     """
     if agent is None:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI agent not initialized. Please wait for system startup."
+            detail="AI agent not initialized"
         )
     
     try:
-        # Generate conversation ID if not provided
-        conversation_id = request.conversation_id or f"conv_{uuid.uuid4().hex[:12]}"
+        # Get or create conversation
+        if request.conversation_id:
+            conversation = db.query(Conversation).filter(
+                Conversation.id == request.conversation_id,
+                Conversation.user_id == current_user.id
+            ).first()
+            
+            if not conversation:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Conversation not found"
+                )
+        else:
+            # Create new conversation
+            conversation = Conversation(
+                user_id=current_user.id,
+                title="New conversation"  # Will update with first message
+            )
+            db.add(conversation)
+            db.commit()
+            db.refresh(conversation)
         
-        # Process query
+        # Save user message to database
+        user_message = Message(
+            conversation_id=conversation.id,
+            role="user",
+            content=request.question
+        )
+        db.add(user_message)
+        
+        # Get conversation history for context
+        messages = db.query(Message).filter(
+            Message.conversation_id == conversation.id
+        ).order_by(Message.created_at).limit(20).all()  # Last 20 messages
+        
+        # Build history for agent
+        history = []
+        for msg in messages:
+            if msg.role == "user":
+                history.append({"role": "user", "content": msg.content})
+            else:
+                history.append({"role": "assistant", "content": msg.content})
+        
+        # Process query with agent
         result = agent.process_query(
             question=request.question,
-            conversation_id=conversation_id
+            conversation_id=conversation.id
         )
         
-        # Format response
-        response = ChatResponse(
+        # Save assistant message to database
+        assistant_message = Message(
+            conversation_id=conversation.id,
+            role="assistant",
+            content=result['answer'],
+            sources=json.dumps(result['sources']) if result['sources'] else None,
+            misconception_detected=result.get('misconception_detected', False),
+            related_questions=json.dumps(result.get('related_questions', []))
+        )
+        db.add(assistant_message)
+        
+        # Update conversation title if first message
+        if conversation.title == "New conversation" and len(messages) == 0:
+            # Use first few words of question as title
+            title = request.question[:50] + "..." if len(request.question) > 50 else request.question
+            conversation.title = title
+        
+        # Update conversation timestamp
+        conversation.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(assistant_message)
+        
+        return ChatResponse(
             answer=result['answer'],
             sources=[Source(**src) for src in result['sources']],
-            conversation_id=conversation_id,
+            conversation_id=conversation.id,
             needs_retrieval=result['needs_retrieval'],
-            misconception_detected=result['misconception_detected'],
-            related_questions=result['related_questions']
+            misconception_detected=result.get('misconception_detected', False),
+            related_questions=result.get('related_questions', [])
         )
-        
-        return response
     
+    except HTTPException:
+        raise
     except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing query: {str(e)}"
         )
 
 
-@router.get("/conversation/{conversation_id}", response_model=ConversationStatus)
-async def get_conversation_status(conversation_id: str):
+@router.get("/conversations", response_model=List[ConversationSummary])
+async def get_conversations(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    limit: int = 50,
+    offset: int = 0
+):
     """
-    Get the status of a conversation.
-    
-    - **conversation_id**: The conversation ID to check
-    
-    Returns conversation metadata.
+    Get all conversations for current user.
     """
-    if agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI agent not initialized"
-        )
+    conversations = db.query(Conversation).filter(
+        Conversation.user_id == current_user.id
+    ).order_by(Conversation.updated_at.desc()).offset(offset).limit(limit).all()
     
-    try:
-        summary = agent.get_conversation_summary(conversation_id)
+    result = []
+    for conv in conversations:
+        message_count = db.query(Message).filter(
+            Message.conversation_id == conv.id
+        ).count()
         
-        return ConversationStatus(
-            conversation_id=conversation_id,
-            exists=summary['exists'],
-            message_count=summary.get('message_count'),
-            turn_count=summary.get('turn_count')
-        )
+        result.append(ConversationSummary(
+            id=conv.id,
+            title=conv.title or "New conversation",
+            created_at=conv.created_at.isoformat(),
+            updated_at=conv.updated_at.isoformat(),
+            message_count=message_count
+        ))
     
-    except Exception as e:
+    return result
+
+
+@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
+async def get_conversation(
+    conversation_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get specific conversation with all messages.
+    """
+    conversation = db.query(Conversation).filter(
+        Conversation.id == conversation_id,
+        Conversation.user_id == current_user.id
+    ).first()
+    
+    if not conversation:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving conversation: {str(e)}"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found"
         )
-
-
-@router.delete("/conversation/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def clear_conversation(conversation_id: str):
-    """
-    Clear conversation history.
     
-    - **conversation_id**: The conversation ID to clear
+    messages = db.query(Message).filter(
+        Message.conversation_id == conversation_id
+    ).order_by(Message.created_at).all()
+    
+    message_list = []
+    for msg in messages:
+        message_dict = {
+            "id": msg.id,
+            "role": msg.role,
+            "content": msg.content,
+            "created_at": msg.created_at.isoformat()
+        }
+        
+        if msg.sources:
+            message_dict["sources"] = json.loads(msg.sources)
+        if msg.related_questions:
+            message_dict["related_questions"] = json.loads(msg.related_questions)
+        if msg.misconception_detected:
+            message_dict["misconception_detected"] = True
+        
+        message_list.append(message_dict)
+    
+    return ConversationDetail(
+        id=conversation.id,
+        title=conversation.title or "New conversation",
+        created_at=conversation.created_at.isoformat(),
+        updated_at=conversation.updated_at.isoformat(),
+        messages=message_list
+    )
+
+
+@router.delete("/conversations/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation(
+    conversation_id: str,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    if agent is None:
+    Delete a conversation and all its messages.
+    """
+    conversation = db.query(Conversation).filter(
+        Conversation.id == conversation_id,
+        Conversation.user_id == current_user.id
+    ).first()
+    
+    if not conversation:
         raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI agent not initialized"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found"
         )
     
-    try:
-        agent.clear_conversation(conversation_id)
-        return None
+    db.delete(conversation)
+    db.commit()
     
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error clearing conversation: {str(e)}"
-        )
+    return None
 
 
-@router.post("/conversation/new", status_code=status.HTTP_201_CREATED)
-async def create_new_conversation():
+@router.post("/conversations/new")
+async def create_conversation(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
     """
-    Create a new conversation ID.
-    
-    Returns a new conversation ID that can be used for subsequent chat requests.
+    Create a new conversation.
     """
-    conversation_id = f"conv_{uuid.uuid4().hex[:12]}"
+    conversation = Conversation(
+        user_id=current_user.id,
+        title="New conversation"
+    )
+    db.add(conversation)
+    db.commit()
+    db.refresh(conversation)
     
     return {
-        "conversation_id": conversation_id,
+        "conversation_id": conversation.id,
         "message": "New conversation created"
     }
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/health")
 async def health_check():
-    """
-    Health check endpoint.
-    
-    Returns system status and readiness information.
-    """
+    """Health check endpoint (no auth required)."""
     if agent is None:
-        return HealthResponse(
-            status="initializing",
-            message="System is starting up. Please wait.",
-            vectorstore_initialized=False
-        )
-    
-    try:
-        # Get vectorstore stats
-        stats = agent.vectorstore.get_stats()
-        
-        return HealthResponse(
-            status="healthy",
-            message="System is ready",
-            vectorstore_initialized=stats['status'] == 'initialized',
-            document_count=stats.get('document_count', 0)
-        )
-    
-    except Exception as e:
-        return HealthResponse(
-            status="unhealthy",
-            message=f"System error: {str(e)}",
-            vectorstore_initialized=False
-        )
-
-
-@router.get("/stats")
-async def get_system_stats():
-    """
-    Get system statistics.
-    
-    Returns detailed statistics about the system.
-    """
-    if agent is None:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI agent not initialized"
-        )
-    
-    try:
-        vectorstore_stats = agent.vectorstore.get_stats()
-        
         return {
-            "vectorstore": vectorstore_stats,
-            "active_conversations": len(agent.conversations),
-            "system_status": "operational"
+            "status": "initializing",
+            "message": "System is starting up",
+            "vectorstore_initialized": False
         }
     
+    try:
+        stats = agent.vectorstore.get_stats()
+        return {
+            "status": "healthy",
+            "message": "System is ready",
+            "vectorstore_initialized": stats['status'] == 'initialized',
+            "document_count": stats.get('document_count', 0)
+        }
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving stats: {str(e)}"
-        )
+        return {
+            "status": "unhealthy",
+            "message": f"System error: {str(e)}",
+            "vectorstore_initialized": False
+        }
