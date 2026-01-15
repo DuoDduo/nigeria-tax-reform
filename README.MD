@@ -298,7 +298,7 @@ Pre-programmed patterns identify common myths:
 └─────────────────────────────────────────────────┘
                        ↓ API
 ┌─────────────────────────────────────────────────┐
-│         OpenAI GPT-4 / Anthropic Claude         │
+│         OpenAI GPT-4       │
 │         (Language Model)                        │
 │                                                 │
 │  • Generates human-like responses              │
@@ -485,13 +485,7 @@ taxease-nigeria/
 │   │       └── ... (4 total)
 │   ├── chroma_db/                     # Vector store
 │   ├── requirements.txt
-│   ├── .env.example
-│   └── .env                           # Your config
-│
-├── docs/                              # Documentation
-│   ├── QUICKSTART.md
-│   ├── TESTING.md
-│   └── ...
+│   └── .env                           # Your config                            
 │
 ├── README.md                          # This file
 └── docker-compose.yml                 # Container setup
@@ -990,7 +984,7 @@ This project is for educational purposes. Tax bill content is public domain.
 
 - Nigerian National Assembly for publishing the reform bills
 - LangChain team for the RAG framework
-- Anthropic/OpenAI for the LLM APIs
+- OpenAI for the LLM APIs
 - The Nigerian people seeking to understand these important reforms
 
 ---
