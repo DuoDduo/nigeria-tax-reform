@@ -62,7 +62,7 @@ const Signup = () => {
             />
             <div className="h-12 w-[1px] bg-white/20 mx-2"></div>
             <div>
-              <h1 className="text-2xl font-black tracking-tighter text-white uppercase leading-none">TaxEase</h1>
+              <h1 className="text-2xl font-black tracking-tighter text-white uppercase leading-none">TaxPyre</h1>
               <p className="text-[10px] font-bold text-green-300 uppercase tracking-[0.2em] mt-1">Federal Republic of Nigeria</p>
             </div>
           </div>

@@ -25,7 +25,7 @@ const Header = ({ onOpenChat }) => {
               </a>
               <a href="mailto:info@taxease.gov.ng" className="flex items-center gap-2 hover:text-green-300 transition-colors">
                 <Mail className="w-3.5 h-3.5" />
-                <span>info@taxease.gov.ng</span>
+                <span>info@taxpyre.gov.ng</span>
               </a>
             </div>
             <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ const Header = ({ onOpenChat }) => {
             />
             <div className="border-l-2 border-gray-200 pl-3">
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-black text-gray-900 leading-none uppercase tracking-tighter">
-                Tax<span className="text-[#008751]">Ease</span>
+                Tax<span className="text-[#008751]">Pyre</span>
               </h1>
               <p className="text-[9px] sm:text-[10px] font-extrabold text-gray-500 uppercase tracking-widest mt-1">
                 National Reform Portal

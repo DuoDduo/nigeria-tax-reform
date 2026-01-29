@@ -30,7 +30,7 @@ const Footer = () => {
                 className="w-12 h-12"
               />
               <div className="border-l border-white/20 pl-4">
-                <h4 className="font-black text-xl uppercase tracking-tighter leading-none">TaxEase</h4>
+                <h4 className="font-black text-xl uppercase tracking-tighter leading-none">TaxPyre</h4>
                 <p className="text-[9px] font-bold text-[#A88948] uppercase tracking-widest mt-1">Federal Republic of Nigeria</p>
               </div>
             </div>
@@ -78,8 +78,8 @@ const Footer = () => {
                 <Mail className="w-4 h-4 text-green-500 mt-1" />
                 <div>
                   <p className="text-[10px] text-gray-500 font-bold uppercase">Email Support</p>
-                  <a href="mailto:info@taxease.gov.ng" className="text-sm font-bold hover:text-green-400 transition-colors">
-                    info@taxease.gov.ng
+                  <a href="mailto:info@taxmind.gov.ng" className="text-sm font-bold hover:text-green-400 transition-colors">
+                    info@taxpyre.gov.ng
                   </a>
                 </div>
               </li>

@@ -186,7 +186,7 @@ const ChatPage = () => {
             className="w-10 h-10"
           />
           <div className="flex flex-col">
-            <span className="font-black text-lg tracking-tighter uppercase leading-none">TaxEase <span className="text-[#A88948]">AI</span></span>
+            <span className="font-black text-lg tracking-tighter uppercase leading-none">TaxPyre <span className="text-[#A88948]">AI</span></span>
             <span className="text-[9px] font-bold text-green-400/70 uppercase tracking-widest mt-1">Official Portal</span>
           </div>
         </div>
@@ -321,7 +321,7 @@ const ChatPage = () => {
                  <div className="w-20 h-20 bg-[#008751]/10 rounded-[2rem] flex items-center justify-center mb-6">
                    <Bot size={40} className="text-[#008751]" />
                  </div>
-                 <h2 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">TaxEase Intelligence</h2>
+                 <h2 className="text-2xl font-black text-gray-900 mb-2 uppercase tracking-tight">TaxPyre Intelligence</h2>
                  <p className="text-gray-500 max-w-sm font-medium mb-8">Access verified data on the 2024-2026 Nigerian Tax Reforms.</p>
 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg text-left">
   {[
