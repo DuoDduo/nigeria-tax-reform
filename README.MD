@@ -1,4 +1,4 @@
-# TaxEase Nigeria 🇳🇬
+# TaxPyre Nigeria 🇳🇬
 
 **AI-Powered Tax Reform Information Portal**
 
@@ -597,7 +597,7 @@ python -m app.main
 **Expected Output:**
 ```
 ======================================================
-STARTING TAXEASE NIGERIA Q&A SYSTEM
+STARTING TAXEPYRE NIGERIA Q&A SYSTEM
 ======================================================
 
 [1/3] Initializing vector store...
